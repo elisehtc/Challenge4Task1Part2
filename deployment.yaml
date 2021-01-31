@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress-mysql
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wordpress-mysql
+  template:
+    metadata:
+      labels:
+        app: wordpress-mysql
+    spec:
+      containers:
+      - image: mysql:latest
+        name: mysql
+        imagePullPolicy: Always
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root_password
+        - name: MYSQL_DATABASE
+          value: wordpress
+        - name: MYSQL_USER
+          value: wordpress
+        - name: MYSQL_PASSWORD
+          value: wordpress  
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+          
+      - image: wordpress:latest
+        name: wordpress
+        imagePullPolicy: Always
+        env:
+          - name: FS_METHOD
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: FS_METHOD
+          - name: WP_DEBUG
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: WP_DEBUG
+          - name: WP_DEBUG_LOG
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: WP_DEBUG_LOG
+          - name: WP_DEBUG_DISPLAY
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: WP_DEBUG_DISPLAY
+          - name: POST_REVISIONS
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: WP_POST_REVISIONS
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: DB_HOST
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: DB_NAME
+          - name: DB_CHARSET
+            valueFrom:
+              configMapKeyRef:
+                name: config
+                key: DB_CHARSET
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_USER
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_PASSWORD
+          - name:  MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key:  MYSQL_DATABASE
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secret
+                key: DB_NAME
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secret
+                key: DB_PASSWORD
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secret
+                key: DB_USER
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: wordpress-secret
+                key: DB_HOST
+        ports:
+        - containerPort: 80
+          name: wordpress-http
+      
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
