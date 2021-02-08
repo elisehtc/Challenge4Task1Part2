@@ -20,14 +20,26 @@ spec:
         name: mysql
         imagePullPolicy: Always
         env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: root_password
-        - name: MYSQL_DATABASE
-          value: wordpress
         - name: MYSQL_USER
-          value: wordpress
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_USER
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
         - name: MYSQL_PASSWORD
-          value: wordpress  
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_PASSWORD
+        - name:  MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key:  MYSQL_DATABASE  
         ports:
         - containerPort: 3306
           name: mysql
@@ -79,26 +91,6 @@ spec:
               configMapKeyRef:
                 name: config
                 key: DB_CHARSET
-          - name: MYSQL_USER
-            valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key: MYSQL_USER
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key: MYSQL_ROOT_PASSWORD
-          - name: MYSQL_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key: MYSQL_PASSWORD
-          - name:  MYSQL_DATABASE
-            valueFrom:
-              secretKeyRef:
-                name: mysql-secret
-                key:  MYSQL_DATABASE
           - name: DB_NAME
             valueFrom:
               secretKeyRef:
